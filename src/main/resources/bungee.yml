@@ -1,0 +1,4 @@
+name: DTWhitelist
+version: ${project.version}
+main: ru.yiaaanni.dreamtime.dtwhitelist.DTWhitelist
+description: SimpleWhiteListForDreamTimeAndMaybeOtherServers
