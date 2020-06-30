@@ -8,8 +8,8 @@ import ru.yiaaanni.dreamtime.dtwhitelist.Utils.DTWLServer;
 
 public class DTWLCommand extends Command {
 
-    public DTWLCommand(String name, String permission, String... aliases) {
-        super(name, permission, aliases);
+    public DTWLCommand(String name) {
+        super(name);
     }
 
     @Override
@@ -23,7 +23,7 @@ public class DTWLCommand extends Command {
 
         boolean help = false;
 
-        if(args.length == 0 || args.length == 1 || args.length == 2) {
+        if(args.length == 0 || args.length == 2) {
             help = true;
         } else if(args.length == 3) {
             if(args[0].equalsIgnoreCase("server")) {
@@ -38,6 +38,8 @@ public class DTWLCommand extends Command {
                         }
                     }
 
+                    DTWhitelist.servers.remove(server);
+
                     if(server == null) {
                         sender.sendMessage(TextComponent.fromLegacyText(
                                 ChatColor.translateAlternateColorCodes('&',
@@ -51,6 +53,8 @@ public class DTWLCommand extends Command {
                     } else {
                         server.setPerm(true);
                     }
+
+                    DTWhitelist.servers.add(server);
 
                     sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&',
                             "§7Охранник Балто §8>> §fТеперь сервер " +
@@ -67,6 +71,8 @@ public class DTWLCommand extends Command {
                         }
                     }
 
+                    DTWhitelist.servers.remove(server);
+
                     if(server == null) {
                         sender.sendMessage(TextComponent.fromLegacyText(
                                 ChatColor.translateAlternateColorCodes('&',
@@ -80,6 +86,8 @@ public class DTWLCommand extends Command {
                     } else {
                         server.setEnabled(true);
                     }
+
+                    DTWhitelist.servers.add(server);
 
                     sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&',
                             "§7Охранник Балто §8>> §fТеперь сервер " +
@@ -95,6 +103,8 @@ public class DTWLCommand extends Command {
                         }
                     }
 
+                    DTWhitelist.servers.remove(server);
+
                     if(server == null) {
                         sender.sendMessage(TextComponent.fromLegacyText(
                                 ChatColor.translateAlternateColorCodes('&',
@@ -108,6 +118,8 @@ public class DTWLCommand extends Command {
                     } else {
                         server.setTest(true);
                     }
+
+                    DTWhitelist.servers.add(server);
 
                     sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&',
                             "§7Охранник Балто §8>> §fТеперь сервер " +
@@ -130,6 +142,8 @@ public class DTWLCommand extends Command {
                         }
                     }
 
+                    DTWhitelist.servers.remove(server);
+
                     if(server == null) {
                         sender.sendMessage(TextComponent.fromLegacyText(
                                 ChatColor.translateAlternateColorCodes('&',
@@ -146,6 +160,9 @@ public class DTWLCommand extends Command {
                     reason = reason.substring(0, reason.length()-1);
 
                     server.setReason(reason);
+
+                    DTWhitelist.servers.add(server);
+
                     sender.sendMessage(TextComponent.fromLegacyText(
                             ChatColor.translateAlternateColorCodes('&',("{prefix}&aНовая причина:&f "+reason)
                                     .replace("{prefix}",DTWhitelist.cfg.getString("messages.prefix")))));
@@ -163,6 +180,8 @@ public class DTWLCommand extends Command {
                         }
                     }
 
+                    DTWhitelist.servers.remove(server);
+
                     if(server == null) {
                         sender.sendMessage(TextComponent.fromLegacyText(
                                 ChatColor.translateAlternateColorCodes('&',
@@ -179,6 +198,8 @@ public class DTWLCommand extends Command {
                         server.getList().add(name);
                         sender.sendMessage(TextComponent.fromLegacyText("§aИгрок добавлен в список!"));
                     }
+
+                    DTWhitelist.servers.add(server);
                 } else if(args[1].equalsIgnoreCase("remove")) {
                     String serverId = args[2];
 
@@ -190,6 +211,8 @@ public class DTWLCommand extends Command {
                             continue;
                         }
                     }
+
+                    DTWhitelist.servers.remove(server);
 
                     if(server == null) {
                         sender.sendMessage(TextComponent.fromLegacyText(
@@ -207,17 +230,31 @@ public class DTWLCommand extends Command {
                         server.getList().remove(name);
                         sender.sendMessage(TextComponent.fromLegacyText("§aИгрок убран из списка!"));
                     }
+
+                    DTWhitelist.servers.add(server);
                 } else {
                     help = true;
                 }
             } else {
                 help = true;
             }
+        } else if(args.length == 1) {
+            if(args[0].equalsIgnoreCase("save")) {
+                DTWhitelist.ins.saveCfg();
+                sender.sendMessage(TextComponent.fromLegacyText(
+                        ChatColor.translateAlternateColorCodes('&',
+                                "&aКонфиг сохранен!")));
+            }
+        } else {
+            help = true;
         }
+
 
         if(help) {
             for(String str : DTWhitelist.cfg.getStringList("messages.help")) {
-                sender.sendMessage(TextComponent.fromLegacyText(str));
+                sender.sendMessage(TextComponent.fromLegacyText(
+                        ChatColor.translateAlternateColorCodes('&',str.
+                                replace("{prefix}","&7Охранник Балто &8>> &f"))));
             }
         }
     }

@@ -26,12 +26,13 @@ import java.util.List;
 public final class DTWhitelist extends Plugin implements Listener {
 
     public static Configuration cfg;
-
+    public static DTWhitelist ins;
     public static List<DTWLServer> servers = new ArrayList<>();
 
     @Override
     public void onEnable() {
-        command();
+        ins = this;
+        getProxy().getPluginManager().registerCommand(this, new DTWLCommand("dtwl"));
         config();
         addAllServers();
 
@@ -43,10 +44,6 @@ public final class DTWhitelist extends Plugin implements Listener {
         try {
             ConfigurationProvider.getProvider(YamlConfiguration.class).save(cfg, new File(getDataFolder(), "config.yml"));
         } catch (IOException e) { }
-    }
-
-    private void command() {
-        getProxy().getPluginManager().registerCommand(this, new DTWLCommand("dtwl","dtwl.admin","dtwhitelist"));
     }
 
     private void config() {
@@ -61,11 +58,15 @@ public final class DTWhitelist extends Plugin implements Listener {
                 Files.copy(is, config.toPath());
             }catch (IOException e) {}
         }
+
+        try {
+            cfg = ConfigurationProvider.getProvider(YamlConfiguration.class).load(config);
+        }catch (Exception e) {}
     }
 
     private void addAllServers() {
-        Collection<String> servs = cfg.getSection("servers").getKeys();
-        for(String s : servs) {
+        Configuration servs = cfg.getSection("servers");
+        for(String s : servs.getKeys()) {
             boolean enable = cfg.getBoolean("servers."+s+".enable");
             boolean perm = cfg.getBoolean("servers."+s+".withperm");
             List<String> list = cfg.getStringList("servers."+s+".list");
@@ -74,6 +75,15 @@ public final class DTWhitelist extends Plugin implements Listener {
             boolean test = cfg.getBoolean("servers."+s+".intest");
 
             servers.add(new DTWLServer(s,enable,perm,list,kick,reason,test));
+        }
+    }
+
+    public void saveCfg() {
+        try {
+            ConfigurationProvider.getProvider(YamlConfiguration.class).
+                    save(cfg, new File(getDataFolder(), "config.yml"));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
