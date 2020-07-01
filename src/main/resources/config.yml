@@ -6,14 +6,14 @@ messages:
   intest: '{prefix}&cВНИМАНИЕ!&f В данный момент режим находится в тестовом режиме! Это значит, что в нём могут быть различные виды багов. Сообщайте о них в тикеты: &bhttps://dreamtime.su/tickets'
   kickmsg: '&9&lDREAM&b&lTIME\n\n&cВы не можете подключиться к серверу!\n&cПричина:\n&7{reason}\n\n&6https://vk.com/mc_dreamtime &c|| &6https://dreamtime.su/'
   help:
-    - '{prefix}&aВсе команды плагина:'
-    - '&a> &7/dtwl help - Эти сообщения'
-    - '&a> &7/dtwl player add <игрок> <режим> - добавить игрока в список разрешённых'
-    - '&a> &7/dtwl player remove <игрок> <режим> - убрать игрока из списка'
-    - '&a> &7/dtwl server perm <название> - переключить вход по перму'
-    - '&a> &7/dtwl server enabled <название> - переключить режим на сервере'
-    - '&a> &7/dtwl server test <название> - переключить режим теста на сервере'
-    - '&a> &7/dtwl server reason <название> <причина> - изменить причину кика'
+  - '{prefix}&aВсе команды плагина:'
+  - '&a> &7/dtwl help - Эти сообщения'
+  - '&a> &7/dtwl player add <игрок> <режим> - добавить игрока в список разрешённых'
+  - '&a> &7/dtwl player remove <игрок> <режим> - убрать игрока из списка'
+  - '&a> &7/dtwl server perm <название> - переключить вход по перму'
+  - '&a> &7/dtwl server enabled <название> - переключить режим на сервере'
+  - '&a> &7/dtwl server test <название> - переключить режим теста на сервере'
+  - '&a> &7/dtwl server reason <название> <причина> - изменить причину кика'
   servernotfound: '{prefix}&cРежим не найден!'
 
 #Сервера
@@ -27,12 +27,13 @@ servers:
     withperm: false
     #Список тех, кто может зайти, когда withperm стоит на false
     list:
-      - 'yiaaanni'
-      - 'thelightbringer'
-      - 'sonechkanuasha'
-      - 'pro100lolyt'
-      - 'stevegrkek'
-      - 'noteyourdope'
+    - 'yiaaanni'
+    - 'thelightbringer'
+    - 'sonechkanuasha'
+    - 'pro100lolyt'
+    - 'stevegrkek'
+    - 'noteyourdope'
+    - 'glimmerkeepen'
     #Кикать ли с сервера
     kick: true
     #Причина кика (пишется в сообщении kickmsg {reason})

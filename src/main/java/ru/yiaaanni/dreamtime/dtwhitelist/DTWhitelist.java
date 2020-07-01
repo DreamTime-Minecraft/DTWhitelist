@@ -1,10 +1,10 @@
 package ru.yiaaanni.dreamtime.dtwhitelist;
 
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
-import net.md_5.bungee.api.event.PreLoginEvent;
-import net.md_5.bungee.api.event.ServerConnectEvent;
+import net.md_5.bungee.api.event.PostLoginEvent;
 import net.md_5.bungee.api.event.ServerSwitchEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
@@ -19,15 +19,15 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 
 public final class DTWhitelist extends Plugin implements Listener {
 
     public static Configuration cfg;
     public static DTWhitelist ins;
-    public static List<DTWLServer> servers = new ArrayList<>();
+    public static Set<DTWLServer> servers = new HashSet<>(); // HashSet, чтобы наверняка не было одинаковых серверов в списке
 
     @Override
     public void onEnable() {
@@ -35,15 +35,12 @@ public final class DTWhitelist extends Plugin implements Listener {
         getProxy().getPluginManager().registerCommand(this, new DTWLCommand("dtwl"));
         config();
         addAllServers();
-
+        saveCfg();
         ProxyServer.getInstance().getPluginManager().registerListener(this, this);
     }
 
     @Override
     public void onDisable() {
-        try {
-            ConfigurationProvider.getProvider(YamlConfiguration.class).save(cfg, new File(getDataFolder(), "config.yml"));
-        } catch (IOException e) { }
     }
 
     private void config() {
@@ -69,135 +66,82 @@ public final class DTWhitelist extends Plugin implements Listener {
         for(String s : servs.getKeys()) {
             boolean enable = cfg.getBoolean("servers."+s+".enable");
             boolean perm = cfg.getBoolean("servers."+s+".withperm");
-            List<String> list = cfg.getStringList("servers."+s+".list");
+            Set<String> list = new HashSet<>(cfg.getStringList("servers." + s + ".list"));
             boolean kick = cfg.getBoolean("servers."+s+".kick");
             String reason = cfg.getString("servers."+s+".kickreason");
             boolean test = cfg.getBoolean("servers."+s+".intest");
 
-            servers.add(new DTWLServer(s,enable,perm,list,kick,reason,test));
+            DTWLServer server = new DTWLServer(s, enable, perm, list, kick, reason, test);
+            server.save(false);
+            servers.add(server);
         }
     }
 
     public void saveCfg() {
         try {
-            ConfigurationProvider.getProvider(YamlConfiguration.class).
-                    save(cfg, new File(getDataFolder(), "config.yml"));
+            ConfigurationProvider.getProvider(YamlConfiguration.class).save(cfg, new File(getDataFolder(), "config.yml"));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    private static final ReentrantLock lock = new ReentrantLock();
+
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onJoin(ServerConnectEvent e) {
+    public void onJoin(PostLoginEvent e) {
         ProxiedPlayer p = e.getPlayer();
 
-        if(e.isCancelled() && e.getReason() != ServerConnectEvent.Reason.JOIN_PROXY) return;
-
-        if(p.hasPermission("dtwl.join.*")) {
-            return;
-        }
-
-        DTWLServer server = null;
-        for(DTWLServer ser : servers) {
-            if(ser.getId().equals("_bungee_")) {
-                server = ser;
-                continue;
-            }
-        }
-
-        if(server == null) {
-            return;
-        }
-
-        if(server.isEnabled()) {
-            if(server.isTest()) {
-                p.sendMessage(TextComponent.fromLegacyText(cfg.getString("messages.intest")));
-            }
-            return;
-        }
-
-        if(server.isPerm()) {
-            if(!p.hasPermission("dtwl.join."+server.getId())) {
-                String reason = server.getReason();
-                String kickmsg = cfg.getString("messages.kickmsg")
-                        .replace("\\n","\n").replace("{reason}",reason);
-
-                p.disconnect(TextComponent.fromLegacyText(kickmsg));
+            if (p.hasPermission("dtwl.join.*")) {
                 return;
-            } else {
-                if(server.isTest()) {
-                    p.sendMessage(TextComponent.fromLegacyText(cfg.getString("messages.intest")));
-                }
             }
-        } else {
-            if(!server.getList().contains(p.getName().toLowerCase())) {
-                String reason = server.getReason();
-                String kickmsg = cfg.getString("messages.kickmsg")
-                        .replace("\\n","\n").replace("{reason}",reason);
 
-                p.disconnect(TextComponent.fromLegacyText(kickmsg));
-                return;
-            } else {
-                if(server.isTest()) {
-                    p.sendMessage(TextComponent.fromLegacyText(cfg.getString("messages.intest")));
-                }
-            }
-        }
+            DTWLServer server = DTWLServer.getServerForName("_bungee_");
+            onServerConnect(server, p);
     }
 
     @EventHandler
     public void onChangeServer(ServerSwitchEvent e) {
         ProxiedPlayer p = e.getPlayer();
 
-        if(p.hasPermission("dtwl.join.*")) {
-            return;
-        }
-
-        DTWLServer server = null;
-        for(DTWLServer ser : servers) {
-            if(ser.getId().equals(p.getServer().getInfo().getName())) {
-                server = ser;
-                continue;
+            if (p.hasPermission("dtwl.join.*")) {
+                return;
             }
-        }
 
+            DTWLServer server = DTWLServer.getServerForName(p.getServer().getInfo().getName());
+            onServerConnect(server, p);
+    }
+
+    private void onServerConnect(DTWLServer server, ProxiedPlayer p) {
         if(server == null) {
             return;
         }
 
-        if(server.isEnabled()) {
-            if(server.isTest()) {
-                p.sendMessage(TextComponent.fromLegacyText(cfg.getString("messages.intest")));
+        if (server.isEnabled()) {
+            if (server.isPerm()) {
+                if (!p.hasPermission("dtwl.join." + server.getId())) {
+                    String reason = server.getReason();
+                    String kickmsg = cfg.getString("messages.kickmsg")
+                            .replace("\\n", "\n").replace("{reason}", reason);
+
+                    p.disconnect(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&', kickmsg)));
+                }
+            } else {
+                if (!server.getList().contains(p.getName().toLowerCase())) {
+                    String reason = server.getReason();
+                    String kickmsg = cfg.getString("messages.kickmsg")
+                            .replace("\\n", "\n").replace("{reason}", reason);
+
+                    p.disconnect(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&', kickmsg)));
+                }
             }
-            return;
         }
 
-        if(server.isPerm()) {
-            if(!p.hasPermission("dtwl.join."+server.getId())) {
-                String reason = server.getReason();
-                String kickmsg = cfg.getString("messages.kickmsg")
-                        .replace("\\n","\n").replace("{reason}",reason);
-
-                p.disconnect(TextComponent.fromLegacyText(kickmsg));
-                return;
-            } else {
-                if(server.isTest()) {
-                    p.sendMessage(TextComponent.fromLegacyText(cfg.getString("messages.intest")));
-                }
-            }
-        } else {
-            if(!server.getList().contains(p.getName().toLowerCase())) {
-                String reason = server.getReason();
-                String kickmsg = cfg.getString("messages.kickmsg")
-                        .replace("\\n","\n").replace("{reason}",reason);
-
-                p.disconnect(TextComponent.fromLegacyText(kickmsg));
-                return;
-            } else {
-                if(server.isTest()) {
-                    p.sendMessage(TextComponent.fromLegacyText(cfg.getString("messages.intest")));
-                }
-            }
+        if (server.isTest()) {
+            p.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&',
+                    cfg.getString("messages.intest")
+                            .replace("{prefix}", cfg.getString("messages.prefix"))
+            )));
         }
     }
+
 }
