@@ -30,7 +30,32 @@ public class DTWLCommand extends Command implements TabExecutor {
             sendHelp(sender);
         } else if(args.length == 3) {
             if(args[0].equalsIgnoreCase("server")) {
-                if(args[1].equalsIgnoreCase("perm")) {
+                if (args[1].equalsIgnoreCase("list")) {
+
+                    String serverId = args[2];
+                    DTWLServer server = DTWLServer.getServerForName(serverId);
+
+                    if (server == null) {
+                        sender.sendMessage(TextComponent.fromLegacyText(
+                                ChatColor.translateAlternateColorCodes('&',
+                                        DTWhitelist.cfg.getString("messages.servernotfound")
+                                                .replace("{prefix}", DTWhitelist.cfg.getString("messages.prefix")))));
+                        return;
+                    }
+                    String out = "&aСписок игроков в белом списке реалма {realm}: &8({count}) &7{players}";
+
+                    String players = String.join(", ", server.getList().toArray(new String[0]));
+                    out = out
+                            .replace("{realm}", server.getId())
+                            .replace("{players}", players)
+                            .replace("{count}", String.valueOf(server.getList().size()));
+
+                    sender.sendMessage(TextComponent.fromLegacyText(
+                            ChatColor.translateAlternateColorCodes('&', out)
+                    ));
+
+                }
+                else if(args[1].equalsIgnoreCase("perm")) {
                     String serverId = args[2];
                     DTWLServer server = DTWLServer.getServerForName(serverId);
 
@@ -131,7 +156,7 @@ public class DTWLCommand extends Command implements TabExecutor {
                 }
             } else if(args[0].equalsIgnoreCase("player")) {
                 if(args[1].equalsIgnoreCase("add")) {
-                    String serverId = args[3];
+                    String serverId = args[2];
                     DTWLServer server = DTWLServer.getServerForName(serverId);
 
                     if(server == null) {
@@ -142,7 +167,7 @@ public class DTWLCommand extends Command implements TabExecutor {
                         return;
                     }
 
-                    String name = args[2].toLowerCase();
+                    String name = args[3].toLowerCase();
 
                     if(server.getList().contains(name)) {
                         sender.sendMessage(TextComponent.fromLegacyText("§cИгрок уже есть в списке!"));
@@ -153,7 +178,7 @@ public class DTWLCommand extends Command implements TabExecutor {
 
                     server.save();
                 } else if(args[1].equalsIgnoreCase("remove")) {
-                    String serverId = args[3];
+                    String serverId = args[2];
                     DTWLServer server = DTWLServer.getServerForName(serverId);
 
                     if(server == null) {
@@ -164,7 +189,7 @@ public class DTWLCommand extends Command implements TabExecutor {
                         return;
                     }
 
-                    String name = args[2].toLowerCase();
+                    String name = args[3].toLowerCase();
 
                     if(!server.getList().contains(name)) {
                         sender.sendMessage(TextComponent.fromLegacyText("§cИгрока нет в списке!"));
@@ -189,6 +214,8 @@ public class DTWLCommand extends Command implements TabExecutor {
                 sender.sendMessage(TextComponent.fromLegacyText(
                         ChatColor.translateAlternateColorCodes('&',
                                 "&aКонфиг сохранен!")));
+            } else {
+                sendHelp(sender);
             }
         } else {
             sendHelp(sender);
@@ -220,6 +247,7 @@ public class DTWLCommand extends Command implements TabExecutor {
                     "perm",
                     "enabled",
                     "test",
+                    "list",
                     "reason"
             ));
 
@@ -256,11 +284,22 @@ public class DTWLCommand extends Command implements TabExecutor {
                 if (args.length == 2) {
                     return getCompleter(args[1], completeArg2Player);
                 } else if (args.length == 3) {
-                    return getCompleterPlayer(args[2], ProxyServer.getInstance().getPlayers());
-                } else if (args.length == 4) {
                     Set<String> keySet = new HashSet<>(ProxyServer.getInstance().getServers().keySet());
                     keySet.add("_bungee_");
-                    return getCompleter(args[3], keySet);
+                    return getCompleter(args[2], keySet);
+                } else if (args.length == 4) {
+                    if (args[1].equalsIgnoreCase("remove")) {
+                        DTWLServer server = DTWLServer.getServerForName(args[2]);
+
+                        Set<String> set;
+                        if (server != null) {
+                            set = server.getList();
+                        } else {
+                            set = new HashSet<>();
+                        }
+                        return getCompleter(args[3], set);
+                    }
+                    return getCompleterPlayer(args[3], ProxyServer.getInstance().getPlayers());
                 }
             } else if (args[0].equalsIgnoreCase("server")) {
                 if (args.length == 2) {

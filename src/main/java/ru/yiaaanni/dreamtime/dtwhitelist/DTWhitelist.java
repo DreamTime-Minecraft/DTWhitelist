@@ -87,7 +87,7 @@ public final class DTWhitelist extends Plugin implements Listener {
 
     private static final ReentrantLock lock = new ReentrantLock();
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler/*(priority = EventPriority.HIGHEST)*/
     public void onJoin(PostLoginEvent e) {
         ProxiedPlayer p = e.getPlayer();
 
