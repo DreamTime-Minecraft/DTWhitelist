@@ -42,7 +42,7 @@ public class DTWLCommand extends Command implements TabExecutor {
                                                 .replace("{prefix}", DTWhitelist.cfg.getString("messages.prefix")))));
                         return;
                     }
-                    String out = "&aСписок игроков в белом списке реалма {realm}: &8({count}) &7{players}";
+                    String out = "&aСписок игроков в белом списке реалма &2{realm}: &8({count}) &7{players}";
 
                     String players = String.join(", ", server.getList().toArray(new String[0]));
                     out = out
@@ -54,6 +54,37 @@ public class DTWLCommand extends Command implements TabExecutor {
                             ChatColor.translateAlternateColorCodes('&', out)
                     ));
 
+                }
+                else if(args[1].equalsIgnoreCase("info")) {
+                    String serverId = args[2];
+                    DTWLServer server = DTWLServer.getServerForName(serverId);
+
+                    if (server == null) {
+                        sender.sendMessage(TextComponent.fromLegacyText(
+                                ChatColor.translateAlternateColorCodes('&',
+                                        DTWhitelist.cfg.getString("messages.servernotfound")
+                                                .replace("{prefix}", DTWhitelist.cfg.getString("messages.prefix")))));
+                        return;
+                    }
+
+                    String info = "&aИнформация о реалме &2{realm}:\n" +
+                            "&aПричина белого списка: &2{reason}\n" +
+                            "&aБелый список: {enabled}\n" +
+                            "&aПо праву: {perm}\n" +
+                            "&aВ тестовом режиме: {test}\n" +
+                            "&aСписок игроков: &2/dtwl server list {realm}";
+
+                    String isEnabled = server.isEnabled() ? "&2Да" : "&cНет";
+                    String isPerm = server.isPerm() ? "&2Да" : "&cНет";
+                    String isTest = server.isTest() ? "&2Да" : "&cНет";
+                    
+                    sender.sendMessage(TextComponent.fromLegacyText(
+                            ChatColor.translateAlternateColorCodes('&',info
+                                    .replace("{realm}",serverId)
+                                    .replace("{reason}",server.getReason())
+                                    .replace("{enabled}",isEnabled)
+                                    .replace("{perm}",isPerm)
+                                    .replace("{test}",isTest))));
                 }
                 else if(args[1].equalsIgnoreCase("perm")) {
                     String serverId = args[2];
