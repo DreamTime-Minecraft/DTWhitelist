@@ -128,7 +128,7 @@ public class DTWLCommand extends Command {
             } else {
                 help = true;
             }
-        } else if(args.length == 4) {
+        } else if(args.length >= 4) {
             if(args[0].equalsIgnoreCase("server")) {
                 if(args[1].equalsIgnoreCase("reason")) {
                     String serverId = args[2];

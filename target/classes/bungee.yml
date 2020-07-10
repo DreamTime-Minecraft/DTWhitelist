@@ -1,0 +1,4 @@
+name: DTWhitelist
+version: 1.0-SNAPSHOT
+main: ru.yiaaanni.dreamtime.dtwhitelist.DTWhitelist
+description: SimpleWhiteListForDreamTimeAndMaybeOtherServers
